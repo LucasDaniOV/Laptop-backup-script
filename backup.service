@@ -1,0 +1,14 @@
+[Unit]
+Description=Backup service
+After=network.target
+
+[Service]
+ExecStart=/home/private/Projects/laptop_backup_script/backup.sh
+User=root
+Type=simple
+Restart=on-failure
+RestartSec=10
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+[Install]
+WantedBy=multi-user.target
