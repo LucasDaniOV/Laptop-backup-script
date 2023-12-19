@@ -1,8 +1,5 @@
 #!/bin/bash
-
-WORK_DIR=/home/private/Projects/laptop_backup_script
-
-source $WORK_DIR/.env
+source /home/private/Projects/laptop_backup_script
 
 # Get the current connected SSID
 CURRENT_SSID=$(iwgetid -r)
@@ -13,15 +10,28 @@ fi
 
 echo "-----STARTING BACKUP @ $(date)-----" >> $LOG_FILE
 
-# Backup installed packages list
-dpkg --get-selections > $WORK_DIR/installed_packages.txt
-rsync -avz -e "ssh -p $SSH_PORT" --progress $WORK_DIR/installed_packages.txt $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH >> $LOG_FILE
+echo "-----BACKING UP INSTALLED PACKAGES LIST @ $(date)-----" >> $LOG_FILE
+rsync -avz -e "ssh -p $SSH_PORT" --progress "$(dpkg --get-selections)" $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH/installed-packages.txt >> $RSYNC_LOG_FILE
 
-# Backup local files
-for dir in ${LOCAL_TO_BE_BACKED_UP[@]}; do
-    echo "Backing up $dir @ $(date)" >> $LOG_FILE
-    rsync -avz --delete -e "ssh -p $SSH_PORT" --progress $dir $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH >> $LOG_FILE
-    echo "Backup of $dir completed @ $(date)" >> $LOG_FILE
-done
+echo "-----BACKING UP /etc @ $(date)-----" >> $LOG_FILE
+rsync -avz -e "ssh -p $SSH_PORT" --progress /etc $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH >> $RSYNC_LOG_FILE
+
+# private
+echo "-----BACKING UP DOCUMENTS @ $(date)-----" >> $LOG_FILE
+rsync -avz --delete -e "ssh -p $SSH_PORT" --progress /home/private/Documents $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH >> $RSYNC_LOG_FILE
+echo "-----BACKING UP SCHOOL @ $(date)-----" >> $LOG_FILE
+rsync -avz --delete --exclude={"MDN","w3schools_offline","node_modules"} -e "ssh -p $SSH_PORT" --progress /home/private/School $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH >> $RSYNC_LOG_FILE
+echo "-----BACKING UP BOOKS @ $(date)-----" >> $LOG_FILE
+rsync -avz --delete -e "ssh -p $SSH_PORT" --progress /home/private/Books $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH >> $RSYNC_LOG_FILE
+echo "-----BACKING UP PICTURES @ $(date)-----" >> $LOG_FILE
+rsync -avz --delete -e "ssh -p $SSH_PORT" --progress /home/private/Pictures $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH >> $RSYNC_LOG_FILE
+
+# work
+echo "-----BACKING UP WORK PROJECTS @ $(date)-----" >> $LOG_FILE
+rsync -avz --delete -e "ssh -p $SSH_PORT" --progress /home/lucas/Projects $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH/monocode/ >> $RSYNC_LOG_FILE
+echo "-----BACKING UP WORK DOCUMENTS @ $(date)-----" >> $LOG_FILE
+rsync -avz --delete -e "ssh -p $SSH_PORT" --progress /home/lucas/Documents $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH/monocode/ >> $RSYNC_LOG_FILE
+echo "-----BACKING UP WORK PICTURES @ $(date)-----" >> $LOG_FILE
+rsync -avz --delete -e "ssh -p $SSH_PORT" --progress /home/lucas/Pictures $REMOTE_USER@$REMOTE_HOST:$REMOTE_BACKUP_PATH/monocode/ >> $RSYNC_LOG_FILE
 
 echo "-----BACKUP COMPLETED @ $(date)-----" >> $LOG_FILE
